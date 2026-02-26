@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>智慧康复评估系统</title>
+
+<style>
+/* ========== 全局 ========== */
+body {
+    margin: 0;
+    font-family: "Microsoft YaHei", Arial, sans-serif;
+    background: linear-gradient(135deg,#e6f9f7,#e8f4ff);
+    color: #034b4a;
+}
+
+/* ========== 顶部标题区 ========== */
+.header {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent; /* 底色透明 */
+}
+
+.title {
+    font-size: 55px;
+    font-weight: bold;
+    color: #007b7a;
+    letter-spacing: 3px;
+    text-align: center;
+    background: transparent;
+}
+
+/* ========== 右上角患者信息卡 ========== */
+.patient-info {
+    position: fixed;
+    top: 20px;
+    right: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 10px 14px;
+
+    font-size: 18px;
+    color: #055b59;
+    box-shadow: 0 4px 10px rgba(0,150,140,0.25);
+    z-index: 1000;
+}
+
+.patient-icon {
+    font-size: 26px;
+    color: #00a6a0;
+}
+
+.patient-text {
+    line-height: 1.6;
+}
+
+
+/* ========== 主体布局（两行三列） ========== */
+.container {
+    width: 90%;
+     margin: 110px auto 20px auto;  /* ↑ 关键：整体下移 */
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);  /* 三列 */
+    grid-template-rows: repeat(2, auto);    /* 两行 */
+    gap: 20px;
+    
+}
+
+/* ========== 卡片通用样式 ========== */
+.card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 18px;
+    box-shadow: 0 6px 15px rgba(0,150,140,0.2);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #007b7a;
+}
+
+/* ===== VAS 样式 ===== */
+.vas-scale {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    margin-top: 6px;
+    font-size: 12px;
+    color: #055b59;
+    text-align: center;
+}
+
+.vas-label {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    margin-top: 4px;
+    font-size: 12px;
+    color: #007b7a;
+    text-align: center;
+}
+
+.vas-result {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.vas-value {
+    font-size: 32px;
+    margin-left: 6px;
+    transition: color 0.3s;
+}
+
+/*======== 肌力评估样式===========*/
+.card label {
+    display: block;
+    margin-top: 8px;
+    font-weight: 500;
+    color: #055b59;
+}
+
+
+/*========动作分析模式===========*/
+/* 上传按钮样式 */
+.card button {
+    margin-top: 8px;
+    margin-bottom: 10px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg,#00b3a4,#00c6ff);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+.card button:hover {
+    opacity: 0.9;
+}
+
+/* ========== 表单元素 ========== */
+input, select, textarea {
+    width: 97%;
+    padding: 6px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+/* ========== 按钮 ========== */
+button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(90deg,#00b3a4,#00c6ff);
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* ========== 底部操作区 ========== */
+.footer {
+    text-align: center;
+    margin: 25px 40px 40px 40px; /* 上下间距更合理 */
+    display: flex;
+    flex-direction: column;       /* 垂直排列：按钮在上，文本框在下 */
+    align-items: center;          /* 居中显示 */
+    gap: 16px;                    /* 按钮和文本框间距 */
+}
+
+/* 生成评估摘要按钮样式 */
+.footer button {
+    padding: 12px 28px;                  
+    font-size: 18px;                     
+    font-weight: bold;                   
+    border-radius: 25px;                 
+    background: linear-gradient(90deg, #00b3a4, #00c6ff); 
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.footer button:hover {
+    opacity: 0.9;
+    transform: scale(1.05);               
+}
+
+/* 摘要文本框样式 */
+#summaryBox {
+    width: 80%;                  
+    max-width: 700px;            
+    padding: 14px;               
+    font-size: 18px;             
+    font-weight: bold;           
+    line-height: 1.8;            
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    background-color: #f9fdfd;
+    color: #034b4a;
+    resize: vertical;            
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部标题 ===== -->
+<div class="header">
+    <div class="title">智慧康复评估系统</div>
+</div>
+
+<!-- ===== 右上角患者信息（不在 header 内） ===== -->
+<div class="patient-info">
+    <div class="patient-icon">👤</div>
+    <div class="patient-text">
+        姓名：<span id="pname">林小橘</span><br>
+        性别：<span id="pgender">女</span><br>
+        年龄：<span id="page">33岁</span><br>
+        患病部位：<span id="page">腰部</span>
+    </div>
+</div>
+
+<!-- ===== 主体内容 ===== -->
+<div class="container">
+
+    <!-- VAS 疼痛评估 -->
+    <div class="card">
+        <h3>疼痛评估（VAS）</h3>
+
+        <input type="range" id="vas" min="0" max="10" step="1" value="0"
+               oninput="updateVAS(this.value)">
+
+        <div class="vas-scale">
+            <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span>
+            <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+        </div>
+
+        <div class="vas-label">
+            <span style="grid-column:1;">无痛</span>
+            <span style="grid-column:3;">轻度</span>
+            <span style="grid-column:5;">中度</span>
+            <span style="grid-column:7;">重度</span>
+            <span style="grid-column:9 / span 3;">剧烈难以忍受</span>
+        </div>
+
+        <div class="vas-result">
+            当前评分：<span id="vasValue" class="vas-value">0</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>关节活动度（ROM）</h3>
+        前屈（°）：<input type="number">
+        后伸（°）：<input type="number">
+        左曲（°）：<input type="number">
+        右曲（°）：<input type="number">
+    </div>
+
+    <div class="card">
+        <h3>腰部肌电测试（μV）</h3>
+        左侧：<input type="number">
+        右侧：<input type="number">
+    </div>
+
+    <div class="card">
+    <h3>肌力评估（MMT）</h3>
+
+    <label>髂腰肌肌力：</label>
+    <select>
+        <option>0级</option>
+        <option>1级</option>
+        <option>2级</option>
+        <option>3级</option>
+        <option>3+级</option>
+        <option>4-级</option>
+        <option>4级</option>
+        <option>5级</option>
+    </select>
+
+    <label>前屈肌力：</label>
+    <select>
+        <option>0级</option>
+        <option>1级</option>
+        <option>2级</option>
+        <option>3级</option>
+        <option>3+级</option>
+        <option>4-级</option>
+        <option>4级</option>
+        <option>5级</option>
+    </select>
+
+    <label>后伸肌力：</label>
+    <select>
+        <option>0级</option>
+        <option>1级</option>
+        <option>2级</option>
+        <option>3级</option>
+        <option>3+级</option>
+        <option>4-级</option>
+        <option>4级</option>
+        <option>5级</option>
+    </select>
+    </div>
+
+    <div class="card">
+    <h3>感觉评估</h3>
+
+    <label>评估项目：</label>
+    <select>
+        <option>两点辨别觉</option>
+        <option>触觉</option>
+        <option>痛觉</option>
+        <option>温度觉</option>
+    </select>
+
+    <label>左侧（mm）：</label>
+    <input type="number" placeholder="请输入左侧距离">
+
+    <label>右侧（mm）：</label>
+    <input type="number" placeholder="请输入右侧距离">
+    </div>
+
+    <div class="card">
+    <h3>动作模式分析</h3>
+
+    <!-- 上传照片按钮 -->
+    <button type="button" onclick="document.getElementById('fileInput').click()">
+        上传照片
+    </button>
+    <input type="file" id="fileInput" accept="image/*" style="display:none" 
+           onchange="handlePhotoUpload(event)">
+
+    <!-- 文本分析结果 -->
+    <textarea id="postureAnalysis" rows="4" placeholder="请输入分析结果..."></textarea>
+    </div>
+
+</div>
+
+<div class="footer">
+    <!-- 生成摘要按钮 -->
+    <button onclick="generateSummary()">生成评估摘要</button>
+
+    <!-- 摘要文本框 -->
+    <textarea id="summaryBox" rows="8" placeholder="评估摘要将显示在这里..." readonly></textarea>
+</div>
+
+
+
+<script>
+function updateVAS(value) {
+    const vasValue = document.getElementById("vasValue");
+    vasValue.innerText = value;
+    value = parseInt(value);
+
+    if (value <= 1) {
+        vasValue.style.color = "#00a36c";
+    } else if (value <= 3) {
+        vasValue.style.color = "#7bc96f";
+    } else if (value <= 5) {
+        vasValue.style.color = "#f0ad4e";
+    } else if (value <= 7) {
+        vasValue.style.color = "#f06b3b";
+    } else {
+        vasValue.style.color = "#d9534f";
+    }
+}
+
+function handlePhotoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 模拟上传处理（可扩展为真实上传接口）
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // 这里你可以获取图片的 base64 或显示在页面上
+        // console.log("已上传图片:", e.target.result);
+
+        // 上传完成后在文本框写入提示内容
+        const textarea = document.getElementById("postureAnalysis");
+        textarea.value = "患者在进行弯腰搬物任务时，表现出显著的腰椎主导屈曲策略，存在明显的髋主导缺失。";
+    };
+    reader.readAsDataURL(file);
+}
+
+function generateSummary() {
+    const summaryText = `
+1. 右侧腰痛。
+2. 腰活动受限: 后仰和右侧屈比较明显。
+3. 腰腹核心力气不够。
+4. 右侧腰部感觉迟钝。
+5. 搬东西姿势不对，只用腰发力。
+    `;
+    document.getElementById("summaryBox").value = summaryText.trim();
+}
+</script>
+
+</body>
+</html>
