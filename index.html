@@ -351,10 +351,7 @@ button:hover {
 
 <div class="footer">
     <!-- 生成摘要按钮 -->
-    <button onclick="generateSummary()">生成评估摘要</button>
-
-    <!-- 摘要文本框 -->
-    <textarea id="summaryBox" rows="8" placeholder="评估摘要将显示在这里..." readonly></textarea>
+    <button onclick="goToTreatment()">生成评估摘要</button>
 </div>
 
 
@@ -395,15 +392,16 @@ function handlePhotoUpload(event) {
     reader.readAsDataURL(file);
 }
 
-function generateSummary() {
-    const summaryText = `
+function goToTreatment() {
+    // 可把摘要存起来（这里用示例）
+    localStorage.setItem("rehabSummary", `
 1. 右侧腰痛。
-2. 腰活动受限: 后仰和右侧屈比较明显。
-3. 腰腹核心力气不够。
+2. 腰活动受限：后仰和右侧屈明显。
+3. 腰腹核心力气不足。
 4. 右侧腰部感觉迟钝。
 5. 搬东西姿势不对，只用腰发力。
-    `;
-    document.getElementById("summaryBox").value = summaryText.trim();
+    `);
+    window.location.href = "treatment.html";
 }
 </script>
 

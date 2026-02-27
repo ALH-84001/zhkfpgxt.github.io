@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>康复治疗方案推荐</title>
+
+<style>
+/* ===== 全局风格（与康复评估系统一致） ===== */
+body {
+    margin: 0;
+    font-family: "Microsoft YaHei", Arial, sans-serif;
+    background: linear-gradient(135deg,#e6f9f7,#e8f4ff);
+    color: #034b4a;
+}
+
+/* ===== 顶部标题 ===== */
+.header {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #007b7a;
+    letter-spacing: 3px;
+}
+
+/* ===== 主体三栏布局 ===== */
+.container {
+    width: 92%;
+    margin: 30px auto;
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 1.2fr;
+    gap: 20px;
+}
+
+/* ===== 卡片通用样式 ===== */
+.card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 18px;
+    box-shadow: 0 6px 15px rgba(0,150,140,0.2);
+}
+
+.card h3 {
+    margin-top: 0;
+    color: #007b7a;
+}
+
+/* ===== 摘要内容 ===== */
+#summaryContent {
+    margin-top: -10px;     
+    font-size: 18px;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+
+/* ===== 中间按钮区 ===== */
+.center-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.center-panel button {
+    padding: 16px 28px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 30px;
+    border: none;
+    background: linear-gradient(90deg,#00b3a4,#00c6ff);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.center-panel button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+/* ===== 治疗方案列表 ===== */
+.plan-list {
+    font-size: 18px;
+    line-height: 2;
+}
+
+.plan-item {
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border-left: 4px solid #00b3a4;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 顶部 -->
+<div class="header">
+    <div class="title">康复治疗方案推荐</div>
+</div>
+
+<!-- 主体 -->
+<div class="container">
+
+    <!-- 左侧：评估摘要 -->
+    <div class="card">
+        <h3>评估摘要</h3>
+        <div id="summaryContent">暂无评估摘要</div>
+    </div>
+
+    <!-- 中间：按钮 -->
+    <div class="center-panel">
+        <button onclick="generatePlan()">推荐治疗方案</button>
+    </div>
+
+    <!-- 右侧：治疗方案 -->
+    <div class="card">
+        <h3>治疗方案</h3>
+        <div id="planContent" class="plan-list">
+            请点击“推荐治疗方案”
+        </div>
+    </div>
+
+</div>
+
+<script>
+// 页面加载时读取摘要
+window.onload = function () {
+    const summary = localStorage.getItem("rehabSummary");
+    if (summary) {
+        document.getElementById("summaryContent").innerText = summary;
+    }
+};
+
+// 生成治疗方案
+function generatePlan() {
+    document.getElementById("planContent").innerHTML = `
+        <div class="plan-item">1. 感觉定位训练</div>
+        <div class="plan-item">2. 肌肉能量技术</div>
+        <div class="plan-item">
+            3. <a href="action_training.html" style="color:#007b7a; text-decoration:none;">动作模式训练</a>
+        </div>
+    `;
+}
+</script>
+
+</body>
+</html>

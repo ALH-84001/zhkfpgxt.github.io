@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>训练结果</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+/* ===== 页面基础 ===== */
+body {
+    margin: 0;
+    font-family: "Microsoft YaHei", Arial, sans-serif;
+    background: linear-gradient(180deg, #00b3a4, #00c6ff);
+}
+
+/* ===== 主容器 ===== */
+.result-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== 上部 2/3 ===== */
+.result-top {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    color: #ffffff;
+    text-align: center;
+}
+
+/* 冠军标志 */
+.badge {
+    font-size: 90px;
+    margin-bottom: 12px;
+}
+
+/* 打卡完成 */
+.success-text {
+    font-size: 32px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+/* 评分 */
+.score {
+    font-size: 22px;
+}
+
+.score span {
+    font-size: 28px;
+    font-weight: bold;
+    margin-left: 6px;
+}
+
+/* ===== 下部 1/3 ===== */
+.result-bottom {
+    flex: 1;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 连续打卡天数 */
+.days {
+    font-size: 22px;
+    color: #034b4a;
+    font-weight: bold;
+}
+
+.days span {
+    font-size: 36px;
+    color: #e6f9f7;
+    margin: 0 6px;
+}
+
+/* 激励文案 */
+.tip {
+    margin-top: 10px;
+    font-size: 16px;
+    color: #ffffff;
+}
+
+/* ===== 响应式适配 ===== */
+@media (max-width: 768px) {
+    .badge {
+        font-size: 70px;
+    }
+    .success-text {
+        font-size: 24px;
+    }
+    .score {
+        font-size: 18px;
+    }
+    .score span {
+        font-size: 24px;
+    }
+    .days {
+        font-size: 18px;
+    }
+    .days span {
+        font-size: 30px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="result-container">
+
+    <!-- ===== 上部 2/3 ===== -->
+    <div class="result-top">
+        <div class="badge">🏆</div>
+        <div class="success-text">打卡完成</div>
+        <div class="score">
+            评分：<span id="scoreText">优秀</span>
+        </div>
+    </div>
+
+    <!-- ===== 下部 1/3 ===== -->
+    <div class="result-bottom">
+        <div class="days">
+            连续打卡 <span id="dayCount">10</span> 天
+        </div>
+        <div class="tip">
+            坚持训练，身体正在悄悄变好 💪
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ===== 可扩展的动态数据接口 ===== */
+
+// 后期可由训练页面通过 URL 参数传值
+// 示例：training-result.html?score=优秀&days=10
+
+const params = new URLSearchParams(window.location.search);
+
+const score = params.get("score");
+const days = params.get("days");
+
+if (score) {
+    document.getElementById("scoreText").innerText = score;
+}
+
+if (days) {
+    document.getElementById("dayCount").innerText = days;
+}
+</script>
+
+</body>
+</html>
