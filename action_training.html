@@ -84,6 +84,7 @@ video {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transform: scaleX(-1);
 }
 #overlayCanvas {
     position: absolute;
@@ -295,7 +296,9 @@ const camera = new Camera(videoElement, {
         await pose.send({ image: videoElement });
     },
     width: 640,
-    height: 480
+    height: 480,
+    facingMode: "user" 
+    
 });
 
 /* ================= Pose 结果回调 ================= */
@@ -501,6 +504,4 @@ async function startHipHinge() {
 </script>
 
 </body>
-
 </html>
-
