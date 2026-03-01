@@ -263,10 +263,12 @@ button:hover {
 
     <div class="card">
         <h3>关节活动度（ROM）</h3>
-        前屈（°）：<input type="number">
-        后伸（°）：<input type="number">
-        左曲（°）：<input type="number">
-        右曲（°）：<input type="number">
+        前屈（°）：<input type="number" id="rom_qianqu">
+        后伸（°）：<input type="number" id="rom_houshen">
+        左侧屈（°）：<input type="number" id="rom_zuoce">
+        右侧屈（°）：<input type="number" id="rom_youce"><br>
+        
+        <button onclick="window.location.href='rom-assessment.html'">进入评估</button>
     </div>
 
     <div class="card">
@@ -403,6 +405,45 @@ function goToTreatment() {
     `);
     window.location.href = "treatment.html";
 }
+
+// 智慧康复评估系统页面的逻辑
+
+window.onload = function() {
+    // 1. 从缓存中读取测量数据
+    const savedData = localStorage.getItem('rom_assessment_data');
+    
+    if (savedData) {
+        try {
+            const results = JSON.parse(savedData);
+            
+            // 2. 建立评估项名称与输入框 ID 的映射关系
+            // 请确保你的 HTML 中 input 的 id 与此一致
+            const idMap = {
+                '前屈': 'rom_qianqu',
+                '后伸': 'rom_houshen',
+                '左侧屈': 'rom_zuoce',
+                '右侧屈': 'rom_youce'
+            };
+
+            // 3. 遍历数据并静默填入
+            for (let key in results) {
+                const targetId = idMap[key];
+                const inputElement = document.getElementById(targetId);
+                if (inputElement) {
+                    inputElement.value = results[key];
+                }
+            }
+
+            // 4. 填入后直接清除缓存，防止下次刷新页面时旧数据再次覆盖手动修改的值
+            localStorage.removeItem('rom_assessment_data');
+            
+            console.log("ROM数据已静默同步成功。");
+        } catch (e) {
+            console.error("解析评估数据失败:", e);
+        }
+    }
+};
+
 </script>
 
 </body>

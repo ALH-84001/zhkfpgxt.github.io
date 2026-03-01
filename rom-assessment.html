@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 关节活动度评估系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: linear-gradient(135deg, #e6f9f7, #e8f4ff);
+            color: #034b4a;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 80px; /* 增加头部高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px; /* 字体显著增大 */
+            font-weight: 800;
+            color: #007b7a;
+            letter-spacing: 4px; /* 增加字间距 */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 10px 30px;
+            gap: 25px; /* 增加组件间距 */
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 200px; /* 宽度微调 */
+        }
+
+        button {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 20px; /* 按钮文字增大 */
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover { opacity: 0.95; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        button:active { transform: scale(0.96); }
+
+        .btn-mode { background: linear-gradient(90deg, #00b3a4, #00c6ff); }
+        .btn-reset { background: linear-gradient(90deg, #ff7e5f, #feb47b); } /* 暖色调重置 */
+        .btn-record { background: linear-gradient(90deg, #6a11cb, #2575fc); height: 90px; font-size: 24px; margin-top: 5px; }
+        .btn-finish { background: linear-gradient(90deg, #11998e, #38ef7d); margin-top: 30px; }
+
+        /* 摄像头展示区增大 */
+        #videoContainer {
+            position: relative;
+            width: 450px; /* 宽度从360增大到450 */
+            height: 750px; /* 高度从600增大到750 */
+            background: #000;
+            border-radius: 25px;
+            border: 6px solid #007b7a;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+        }
+
+        #cameraVideo, #overlayCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotateY(180deg);
+        }
+
+        .angle-info {
+            position: absolute;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 30px;
+            border-radius: 35px;
+            font-size: 24px; /* 角度显示增大 */
+            font-weight: bold;
+            color: #007b7a;
+            border: 3px solid #00b3a4;
+            z-index: 10;
+        }
+
+        /* 外部记录面板 */
+        .record-panel-outside {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid #00b3a4;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        .record-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007b7a;
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 2px solid #e0f2f1;
+            padding-bottom: 8px;
+        }
+
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 18px;
+            border-bottom: 1px dashed #ccc;
+        }
+        .record-item:last-child { border-bottom: none; }
+        .record-item span:last-child { color: #6a11cb; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">关节活动度评估</div>
+
+<div class="main-container">
+    <div class="sidebar">
+        <button class="btn-mode" onclick="startAssessment('前屈')">前 屈</button>
+        <button class="btn-mode" onclick="startAssessment('后伸')">后 伸</button>
+        <button class="btn-mode" onclick="startAssessment('左侧屈')">左侧屈</button>
+        <button class="btn-mode" onclick="startAssessment('右侧屈')">右侧屈</button>
+        <button class="btn-finish" onclick="finishAssessment()">完成评估</button>
+    </div>
+
+    <div id="videoContainer">
+        <div id="angleDisplay" class="angle-info">待开启</div>
+        <video id="cameraVideo" playsinline></video>
+        <canvas id="overlayCanvas" width="450" height="750"></canvas>
+    </div>
+
+    <div class="sidebar">
+        <button class="btn-reset" onclick="resetBaseline()">归零/校准</button>
+        <button class="btn-record" onclick="addRecord()">记 录</button>
+        
+        <div class="record-panel-outside" id="recordList">
+            <div class="record-title">评估结果清单</div>
+            <div id="recordItems"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('overlayCanvas');
+    const ctx = canvas.getContext('2d');
+    const angleDisplay = document.getElementById('angleDisplay');
+    const recordItemsDiv = document.getElementById('recordItems');
+
+    let camera = null;
+    let currentMode = "";
+    let baseAngleRad = 0; 
+    let lastRawAngleRad = 0;
+    let currentRelativeAngle = 0;
+    let assessmentResults = {};
+
+    const pose = new Pose({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+
+    pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+    pose.onResults(onPoseResults);
+
+    function startAssessment(mode) {
+        currentMode = mode;
+        angleDisplay.innerText = `测量：${mode}`;
+        if (!camera) {
+            // 设置摄像头采集分辨率
+            camera = new Camera(video, {
+                onFrame: async () => { await pose.send({image: video}); },
+                width: 450, height: 750
+            });
+            camera.start();
+        }
+    }
+
+    function resetBaseline() { baseAngleRad = lastRawAngleRad; }
+
+    function addRecord() {
+        if (!currentMode) return;
+        assessmentResults[currentMode] = currentRelativeAngle.toFixed(1);
+        updateRecordUI();
+    }
+
+    function updateRecordUI() {
+        recordItemsDiv.innerHTML = '';
+        for (let key in assessmentResults) {
+            const item = document.createElement('div');
+            item.className = 'record-item';
+            item.innerHTML = `<span>${key}</span><span>${assessmentResults[key]}°</span>`;
+            recordItemsDiv.appendChild(item);
+        }
+    }
+
+    function finishAssessment() {
+        localStorage.setItem('rom_assessment_data', JSON.stringify(assessmentResults));
+        window.location.href = 'index.html'; 
+    }
+
+    function onPoseResults(results) {
+        if (!results.poseLandmarks) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const lm = results.poseLandmarks;
+
+        // 关键点提取
+        const nose = lm[0];
+        const shoulderMid = { x: (lm[11].x + lm[12].x) / 2, y: (lm[11].y + lm[12].y) / 2 };
+        const hipMid = { x: (lm[23].x + lm[24].x) / 2, y: (lm[23].y + lm[24].y) / 2 };
+
+        lastRawAngleRad = Math.atan2(shoulderMid.x - hipMid.x, -(shoulderMid.y - hipMid.y));
+        currentRelativeAngle = Math.abs((lastRawAngleRad - baseAngleRad) * 180 / Math.PI);
+
+        // 绘制垂直参考线
+        ctx.save();
+        ctx.translate(hipMid.x * canvas.width, hipMid.y * canvas.height);
+        ctx.rotate(baseAngleRad);
+        ctx.beginPath();
+        ctx.setLineDash([20, 15]); ctx.lineWidth = 6; ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.moveTo(0, 800); ctx.lineTo(0, -1200);
+        ctx.stroke();
+        ctx.restore();
+
+        // 绘制骨架
+        const drawL = (p1, p2, c="#00ffcc", w=4) => {
+            ctx.beginPath(); ctx.lineWidth=w; ctx.strokeStyle=c;
+            ctx.moveTo(p1.x*canvas.width, p1.y*canvas.height);
+            ctx.lineTo(p2.x*canvas.width, p2.y*canvas.height); ctx.stroke();
+        };
+        drawL(nose, shoulderMid);
+        drawL(lm[11], lm[12]);
+        drawL(shoulderMid, hipMid, "#ffff00", 6);
+        drawL(lm[23], lm[24]);
+        [lm[23],lm[25],lm[25],lm[27],lm[24],lm[26],lm[26],lm[28]].forEach((p,i,a) => { if(i%2===0) drawL(a[i], a[i+1]); });
+
+        const drawP = (p, c, r) => {
+            ctx.beginPath(); ctx.arc(p.x*canvas.width, p.y*canvas.height, r, 0, 2*Math.PI);
+            ctx.fillStyle=c; ctx.fill();
+        };
+        drawP(nose, "#ff4757", 9); // 头部点增大
+        [lm[11], lm[12], lm[23], lm[24]].forEach(p => drawP(p, "#00ffcc", 5));
+
+        if(currentMode) angleDisplay.innerText = `${currentMode}：${currentRelativeAngle.toFixed(1)}°`;
+    }
+</script>
+</body>
+</html>
